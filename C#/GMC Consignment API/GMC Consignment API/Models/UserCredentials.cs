@@ -7,10 +7,11 @@ namespace GMC_Consignment_API.Models
 {
     public class UserCredentials
     {
-        public static string Username { get; set; }
-        public static string Password { get; set; }
-        public static string Name { get; set; }
-        public static string SKUMin { get; set; }
-        public static string SKUMax { get; set; }
+        public string Username { get; set; }
+        public string Password { get; set; }
+        public string SKUMin { get; set; }
+        public string SKUMax { get; set; }
+        public string Name { get; set; }
+        public string Email { get; set; }
     }
 }
