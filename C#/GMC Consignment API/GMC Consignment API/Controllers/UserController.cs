@@ -368,5 +368,32 @@ namespace GMC_Consignment_API.Controllers
 
             return table.Rows[0][0].ToString();
         }
+
+        [HttpGet]
+        [Route("Authenticate")]
+        public int Authenticate(LoginInfo info)
+        {
+            SqlConnection connection = new SqlConnection(Connection.connectionString());
+            SqlCommand command = new SqlCommand("usp_Authenticate");
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add(new SqlParameter("@Username", info.Username));
+            command.Parameters.Add(new SqlParameter("@Password", info.Password));
+            command.Connection = connection;
+
+            connection.Open();
+            SqlDataAdapter adapter = new SqlDataAdapter(command);
+            DataTable table = new DataTable();
+            adapter.Fill(table);
+            connection.Close();
+
+            if (table.Rows[0][0].ToString() == info.Username && table.Rows[0][1].ToString() == info.Password)
+            {
+                return 1;
+            }
+            else
+            {
+                return 0;
+            }
+        }
     }
 }

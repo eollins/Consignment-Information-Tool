@@ -150,6 +150,18 @@ namespace GMC_Consignment_API.Tests
             Assert.AreNotEqual(email, "");
         }
 
+        [TestMethod]
+        public void AuthenticateTest()
+        {
+            UserController controller = new UserController();
+            LoginInfo info = new LoginInfo();
+            info.Username = "TESTUSER";
+            info.Password = "TESTPASSWORD";
+
+            int result = controller.Authenticate(info);
+            Assert.AreEqual(result, 1);
+        }
+
         public int GetTestID()
         {
             RegisterUserTest();
