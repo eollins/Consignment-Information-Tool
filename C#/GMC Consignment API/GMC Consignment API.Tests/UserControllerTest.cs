@@ -10,162 +10,289 @@ namespace GMC_Consignment_API.Tests
     [TestClass]
     public class UserControllerTest
     {
-        [TestMethod]
-        public void RegisterUserTest()
-        {
-            UserController controller = new UserController();
-            UserCredentials credentials = new UserCredentials();
-            credentials.Username = "TESTUSER";
-            credentials.Password = "TESTPASSWORD";
-            credentials.SKUMin = "0";
-            credentials.SKUMax = "0";
-            credentials.Name = "TESTNAME";
-            credentials.Email = "TESTEMAIL";
-            int result = controller.RegisterUser(credentials);
+        UserController controller = new UserController();
 
+        [TestMethod]
+        public void AddUserTest()
+        {
+            UserCredentials creds = new UserCredentials();
+            creds.Username = "TESTUSER";
+            creds.Password = "TESTPASSWORD";
+            creds.Name = "TESTNAME";
+            creds.Email = "TESTEMAIL";
+            creds.IsTest = 1;
+
+            int result = controller.AddUser(creds);
+            Assert.AreEqual(result, 1);
+        }
+        
+        [TestMethod]
+        public void AddConsignmentTest()
+        {
+            ConsignmentInformation info = new ConsignmentInformation();
+            info.SKUMin = "0";
+            info.SKUMax = "0";
+            info.ConsignmentName = "TESTCONSIGNMENT";
+            info.Total = "0";
+            info.IsTest = 1;
+
+            int result = controller.AddConsignment(info);
+            Assert.AreEqual(result, 1);
+        }
+
+        [TestMethod]
+        public void AssignConsignmentTest()
+        {
+            Assignment assignment = new Assignment();
+            assignment.UserID = int.Parse(GetUserID());
+            assignment.ConsignmentID = int.Parse(GetConsignmentID());
+
+            int result = controller.AssignConsignment(assignment);
+            Assert.AreEqual(result, 1);
+        }
+
+        [TestMethod]
+        public void UnassignConsignmentTest()
+        {
+            Assignment assignment = new Assignment();
+            string pair = GetTestConsignmentPair();
+            assignment.UserID = int.Parse(pair.Split(',')[0]);
+            assignment.ConsignmentID = int.Parse(pair.Split(',')[1]);
+
+            int result = controller.UnassignConsignment(assignment);
             Assert.AreEqual(result, 1);
         }
 
         [TestMethod]
         public void RemoveUserTest()
         {
-            UserController controller = new UserController();
-            int result = controller.RemoveUser(GetTestID());
+            int result = controller.RemoveUser(int.Parse(GetUserID()));
+            Assert.AreEqual(result, 1);
+        }
 
+        [TestMethod]
+        public void RemoveConsignmentTest()
+        {
+            int result = controller.RemoveConsignment(int.Parse(GetUserID()));
             Assert.AreEqual(result, 1);
         }
 
         [TestMethod]
         public void ChangeUsernameTest()
         {
-            UserController controller = new UserController();
-            int result = controller.ChangeUsername("TESTUSER2", GetTestID());
-
+            int result = controller.ChangeUsername(int.Parse(GetUserID()), "TESTUSER2");
             Assert.AreEqual(result, 1);
         }
 
         [TestMethod]
         public void ChangePasswordTest()
         {
-            UserController controller = new UserController();
-            int result = controller.ChangePassword("TESTPASSWORD2", GetTestID());
-
-            Assert.AreEqual(result, 1);
-        }
-
-        [TestMethod]
-        public void ChangeSKURangeTest()
-        {
-            SqlConnection connection = new SqlConnection(Connection.connectionString());
-            int ID = GetTestID();
-
-            SqlCommand getSKURangeCommand = new SqlCommand("usp_getSKURangeByID");
-            getSKURangeCommand.CommandType = CommandType.StoredProcedure;
-            getSKURangeCommand.Parameters.Add(new SqlParameter("@UserID", ID));
-            getSKURangeCommand.Connection = connection;
-            connection.Open();
-            SqlDataAdapter adapter = new SqlDataAdapter(getSKURangeCommand);
-            DataTable table = new DataTable();
-            adapter.Fill(table);
-            connection.Close();
-
-            int SKUMin = int.Parse(table.Rows[0][0].ToString());
-            int SKUMax = int.Parse(table.Rows[0][1].ToString());
-
-            UserController controller = new UserController();
-            int result = controller.ChangeSKURange(SKUMin + 1, SKUMax + 1, GetTestID());
-
-            Assert.AreEqual(result, 1);
-        }
-
-        [TestMethod]
-        public void ChangeNameTest()
-        {
-            UserController controller = new UserController();
-            int result = controller.ChangeName("TESTNAME2", GetTestID());
-
+            int result = controller.ChangePassword(int.Parse(GetUserID()), "TESTPASSWORD2");
             Assert.AreEqual(result, 1);
         }
 
         [TestMethod]
         public void ChangeEmailTest()
         {
-            UserController controller = new UserController();
-            int result = controller.ChangeEmail("TESTEMAIL2", GetTestID());
-
+            int result = controller.ChangeEmail(int.Parse(GetUserID()), "TESTEMAIL2");
             Assert.AreEqual(result, 1);
         }
 
         [TestMethod]
-        public void GetUsernameByIDTest()
+        public void ChangeNameTest()
         {
-            UserController controller = new UserController();
-            string username = controller.GetUsernameByID(GetTestID());
+            int result = controller.ChangeName(int.Parse(GetUserID()), "TESTNAME2");
+            Assert.AreEqual(result, 1);
+        }
 
+        [TestMethod]
+        public void ChangeSKURangeTest()
+        {
+            SKURange range = new SKURange();
+            range.ConsignmentID = int.Parse(GetConsignmentID());
+            range.Min = 1;
+            range.Max = 1;
+
+            int result = controller.ChangeSKURange(range);
+            Assert.AreEqual(result, 1);
+        }
+
+        [TestMethod]
+        public void ChangeConsignmentNameTest()
+        {
+            int result = controller.ChangeConsignmentName(int.Parse(GetConsignmentID()), "TESTCONSIGNMENT2");
+            Assert.AreEqual(result, 1);
+        }
+
+        [TestMethod]
+        public void ChangeConsignmentStatusTest()
+        {
+            int result = controller.ChangeConsignmentStatus(int.Parse(GetConsignmentID()), 1);
+            Assert.AreEqual(result, 1);
+        }
+
+        [TestMethod]
+        public void ChangeTotalTest()
+        {
+            int result = controller.ChangeTotal(int.Parse(GetConsignmentID()), "1");
+            Assert.AreEqual(result, 1);
+        }
+
+        [TestMethod]
+        public void ChangeMoneyMadeTest()
+        {
+            int result = controller.ChangeMoneyMade(int.Parse(GetConsignmentID()), "1");
+            Assert.AreEqual(result, 1);
+        }
+
+        [TestMethod]
+        public void GetUsernameTest()
+        {
+            string username = controller.GetUsername(int.Parse(GetUserID()));
             Assert.AreNotEqual(username, "");
         }
 
         [TestMethod]
-        public void GetIDByUsernameTest()
+        public void GetPasswordTest()
         {
-            UserController controller = new UserController();
-            string userID = controller.GetIDByUsername("TESTUSER");
-
-            Assert.AreNotEqual(userID, "");
-        }
-
-        [TestMethod]
-        public void GetPasswordByIDTest()
-        {
-            UserController controller = new UserController();
-            string password = controller.GetPasswordByID(GetTestID());
-
+            string password = controller.GetPassword(int.Parse(GetUserID()));
             Assert.AreNotEqual(password, "");
         }
-
+        
         [TestMethod]
-        public void GetSKURangeByIDTest()
+        public void GetEmailTest()
         {
-            UserController controller = new UserController();
-            string SKURange = controller.GetSKURangeByID(GetTestID());
-
-            Assert.AreNotEqual(SKURange, "");
+            string email = controller.GetEmail(int.Parse(GetUserID()));
+            Assert.AreNotEqual(email, "");
         }
 
         [TestMethod]
-        public void GetNameByIDTest()
+        public void GetNameTest()
         {
-            UserController controller = new UserController();
-            string name = controller.GetNameByID(GetTestID());
-
+            string name = controller.GetName(int.Parse(GetUserID()));
             Assert.AreNotEqual(name, "");
         }
 
         [TestMethod]
-        public void GetEmailByIDTest()
+        public void GetConsignmentTest()
         {
-            UserController controller = new UserController();
-            string email = controller.GetEmailByID(GetTestID());
+            string consignment = controller.GetConsignment(int.Parse(GetUserID()));
+            Assert.AreNotEqual(consignment, null);
+        }
 
-            Assert.AreNotEqual(email, "");
+        [TestMethod]
+        public void GetUserIDTest()
+        {
+            string userID = controller.GetUserID("TESTUSER");
+            Assert.AreNotEqual(userID, "");
         }
 
         [TestMethod]
         public void AuthenticateTest()
         {
-            UserController controller = new UserController();
             LoginInfo info = new LoginInfo();
             info.Username = "TESTUSER";
             info.Password = "TESTPASSWORD";
-
             int result = controller.Authenticate(info);
             Assert.AreEqual(result, 1);
         }
 
-        public int GetTestID()
+        [TestMethod]
+        public void GetUserTest()
         {
-            RegisterUserTest();
-            return int.Parse(new UserController().GetIDByUsername("TESTUSER"));
+            AssignConsignmentTest();
+            string userID = controller.GetUser(int.Parse(GetTestConsignmentPair().Split(',')[1]));
+            Assert.AreNotEqual(userID, "");
+        }
+
+        [TestMethod]
+        public void GetSKURangeTest()
+        {
+            string skuRange = controller.GetSKURange(int.Parse(GetConsignmentID()));
+            Assert.AreNotEqual(skuRange, "");
+        }
+
+        [TestMethod]
+        public void GetConsignmentIDTest()
+        {
+            string consignmentID = controller.GetConsignmentID("TESTCONSIGNMENT");
+            Assert.AreNotEqual(consignmentID, "");
+        }
+
+        [TestMethod]
+        public void GetConsignmentNameTest()
+        {
+            string consignmentName = controller.GetConsignmentName(int.Parse(GetConsignmentID()));
+            Assert.AreNotEqual(consignmentName, "");
+        }
+
+        [TestMethod]
+        public void GetConsignmentStatusTest()
+        {
+            int consignmentStatus = controller.GetConsignmentStatus(int.Parse(GetConsignmentID()));
+            Assert.AreNotEqual(consignmentStatus, null);
+        }
+
+        [TestMethod]
+        public void GetTotalTest()
+        {
+            string total = controller.GetTotal(int.Parse(GetConsignmentID()));
+            Assert.AreNotEqual(total, "");
+        }
+
+        [TestMethod]
+        public void GetMoneyMadeTest()
+        {
+            string moneyMade = controller.GetMoneyMade(int.Parse(GetConsignmentID()));
+            Assert.AreNotEqual(moneyMade, "");
+        }
+
+        public string GetUserID()
+        {
+            SqlConnection connection = new SqlConnection(Connection.connectionString());
+            SqlCommand command = new SqlCommand("usp_getTestUserID");
+            command.CommandType = CommandType.StoredProcedure;
+            command.Connection = connection;
+
+            connection.Open();
+            SqlDataAdapter adapter = new SqlDataAdapter(command);
+            DataTable table = new DataTable();
+            adapter.Fill(table);
+            connection.Close();
+
+            return table.Rows[0][0].ToString();
+        }
+
+        public string GetConsignmentID()
+        {
+            SqlConnection connection = new SqlConnection(Connection.connectionString());
+            SqlCommand command = new SqlCommand("usp_getTestConsignmentID");
+            command.CommandType = CommandType.StoredProcedure;
+            command.Connection = connection;
+
+            connection.Open();
+            SqlDataAdapter adapter = new SqlDataAdapter(command);
+            DataTable table = new DataTable();
+            adapter.Fill(table);
+            connection.Close();
+
+            return table.Rows[0][0].ToString();
+        }
+
+        public string GetTestConsignmentPair()
+        {
+            SqlConnection connection = new SqlConnection(Connection.connectionString());
+            SqlCommand command = new SqlCommand("usp_getTestConsignmentPair");
+            command.CommandType = CommandType.StoredProcedure;
+            command.Connection = connection;
+
+            connection.Open();
+            SqlDataAdapter adapter = new SqlDataAdapter(command);
+            DataTable table = new DataTable();
+            adapter.Fill(table);
+            connection.Close();
+
+            return table.Rows[0][0].ToString() + "," + table.Rows[0][1].ToString();
         }
     }
 }

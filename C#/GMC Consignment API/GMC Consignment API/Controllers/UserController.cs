@@ -15,25 +15,18 @@ namespace GMC_Consignment_API.Controllers
     [EnableCors("*", "*", "*")]
     public class UserController : ApiController
     {
-        /// <summary>
-        /// Registers a new user.
-        /// </summary>
-        /// <param name="creds">The credentials of the user being registered.</param>
-        /// <returns>The success of the registration.</returns>
         [HttpPost]
-        [Route("RegisterUser")]
-        public int RegisterUser(UserCredentials creds)
+        [Route("AddUser")]
+        public int AddUser(UserCredentials creds)
         {
             SqlConnection connection = new SqlConnection(Connection.connectionString());
             SqlCommand command = new SqlCommand("usp_addUser");
-            command.CommandType = System.Data.CommandType.StoredProcedure;
+            command.CommandType = CommandType.StoredProcedure;
             command.Parameters.Add(new SqlParameter("@Username", creds.Username));
             command.Parameters.Add(new SqlParameter("@Password", creds.Password));
-            command.Parameters.Add(new SqlParameter("@SKUMin", creds.SKUMin));
-            command.Parameters.Add(new SqlParameter("@SKUMax", creds.SKUMax));
-            command.Parameters.Add(new SqlParameter("@Name", creds.Name));
             command.Parameters.Add(new SqlParameter("@Email", creds.Email));
-
+            command.Parameters.Add(new SqlParameter("@Name", creds.Name));
+            command.Parameters.Add(new SqlParameter("@IsTest", creds.IsTest));
             command.Connection = connection;
 
             connection.Open();
@@ -52,18 +45,97 @@ namespace GMC_Consignment_API.Controllers
             }
         }
 
-        /// <summary>
-        /// Removes a user from the database.
-        /// </summary>
-        /// <param name="userID">The ID number of the user being removed.</param>
-        /// <returns>The success of the removal.</returns>
+        [HttpPost]
+        [Route("AddConsignment")]
+        public int AddConsignment(ConsignmentInformation info)
+        {
+            SqlConnection connection = new SqlConnection(Connection.connectionString());
+            SqlCommand command = new SqlCommand("usp_addConsignment");
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add(new SqlParameter("@SKUMin", info.SKUMin));
+            command.Parameters.Add(new SqlParameter("@SKUMax", info.SKUMax));
+            command.Parameters.Add(new SqlParameter("@ConsignmentName", info.ConsignmentName));
+            command.Parameters.Add(new SqlParameter("@Total", info.Total));
+            command.Parameters.Add(new SqlParameter("@IsTest", info.IsTest));
+            command.Connection = connection;
+
+            connection.Open();
+            SqlDataAdapter adapter = new SqlDataAdapter(command);
+            DataTable table = new DataTable();
+            adapter.Fill(table);
+            connection.Close();
+
+            if (table.Rows.Count > 0)
+            {
+                return 1;
+            }
+            else
+            {
+                return 0;
+            }
+        }
+
+        [HttpPost]
+        [Route("AssignConsignment")]
+        public int AssignConsignment(Assignment assignment)
+        {
+            SqlConnection connection = new SqlConnection(Connection.connectionString());
+            SqlCommand command = new SqlCommand("usp_assignConsignment");
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add(new SqlParameter("@UserID", assignment.UserID));
+            command.Parameters.Add(new SqlParameter("@ConsignmentID", assignment.ConsignmentID));
+            command.Connection = connection;
+
+            connection.Open();
+            SqlDataAdapter adapter = new SqlDataAdapter(command);
+            DataTable table = new DataTable();
+            adapter.Fill(table);
+            connection.Close();
+
+            if (table.Rows[0][0].ToString() == assignment.UserID.ToString() && table.Rows[0][1].ToString() == assignment.ConsignmentID.ToString())
+            {
+                return 1;
+            }
+            else
+            {
+                return 0;
+            }
+        }
+
+        [HttpPost]
+        [Route("UnassignConsignment")]
+        public int UnassignConsignment(Assignment assignment)
+        {
+            SqlConnection connection = new SqlConnection(Connection.connectionString());
+            SqlCommand command = new SqlCommand("usp_unassignConsignment");
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add(new SqlParameter("@UserID", assignment.UserID));
+            command.Parameters.Add(new SqlParameter("@ConsignmentID", assignment.ConsignmentID));
+            command.Connection = connection;
+
+            connection.Open();
+            SqlDataAdapter adapter = new SqlDataAdapter(command);
+            DataTable table = new DataTable();
+            adapter.Fill(table);
+            connection.Close();
+
+            if (table.Rows[0][0].ToString() != assignment.UserID.ToString() && table.Rows[0][1].ToString() != assignment.ConsignmentID.ToString())
+            {
+                return 1;
+            }
+            else
+            {
+                return 0;
+            }
+        }
+
         [HttpPost]
         [Route("RemoveUser")]
         public int RemoveUser(int userID)
         {
             SqlConnection connection = new SqlConnection(Connection.connectionString());
             SqlCommand command = new SqlCommand("usp_removeUser");
-            command.CommandType = System.Data.CommandType.StoredProcedure;
+            command.CommandType = CommandType.StoredProcedure;
             command.Parameters.Add(new SqlParameter("@UserID", userID));
             command.Connection = connection;
 
@@ -82,22 +154,15 @@ namespace GMC_Consignment_API.Controllers
                 return 0;
             }
         }
-        
-        /// <summary>
-        /// Changes the username of a given user.
-        /// </summary>
-        /// <param name="newName">The new name of the user.</param>
-        /// <param name="userID">The ID number of the user whose username is being changed.</param>
-        /// <returns>The success of the change.</returns>
+
         [HttpPost]
-        [Route("ChangeUsername")]
-        public int ChangeUsername(string newName, int userID)
+        [Route("RemoveConsignment")]
+        public int RemoveConsignment(int userID)
         {
             SqlConnection connection = new SqlConnection(Connection.connectionString());
-            SqlCommand command = new SqlCommand("usp_changeUsername");
-            command.CommandType = System.Data.CommandType.StoredProcedure;
-            command.Parameters.Add(new SqlParameter("@UserID", userID));
-            command.Parameters.Add(new SqlParameter("@newUsername", newName));
+            SqlCommand command = new SqlCommand("usp_removeConsignment");
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add(new SqlParameter("@ConsignmentID", userID));
             command.Connection = connection;
 
             connection.Open();
@@ -106,7 +171,7 @@ namespace GMC_Consignment_API.Controllers
             adapter.Fill(table);
             connection.Close();
 
-            if (table.Rows[0][0].ToString() == newName)
+            if (table.Rows.Count == 0)
             {
                 return 1;
             }
@@ -116,21 +181,42 @@ namespace GMC_Consignment_API.Controllers
             }
         }
 
-        /// <summary>
-        /// Changes the password of a given user.
-        /// </summary>
-        /// <param name="newPassword">The new password for the user.</param>
-        /// <param name="userID">The ID number of the user whose password is being changed.</param>
-        /// <returns></returns>
+        [HttpPost]
+        [Route("ChangeUsername")]
+        public int ChangeUsername(int userID, string newUsername)
+        {
+            SqlConnection connection = new SqlConnection(Connection.connectionString());
+            SqlCommand command = new SqlCommand("usp_changeUsername");
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add(new SqlParameter("@UserID", userID));
+            command.Parameters.Add(new SqlParameter("@NewUsername", newUsername));
+            command.Connection = connection;
+
+            connection.Open();
+            SqlDataAdapter adapter = new SqlDataAdapter(command);
+            DataTable table = new DataTable();
+            adapter.Fill(table);
+            connection.Close();
+
+            if (table.Rows[0][0].ToString() == newUsername)
+            {
+                return 1;
+            }
+            else
+            {
+                return 0;
+            }
+        }
+
         [HttpPost]
         [Route("ChangePassword")]
-        public int ChangePassword(string newPassword, int userID)
+        public int ChangePassword(int userID, string newPassword)
         {
             SqlConnection connection = new SqlConnection(Connection.connectionString());
             SqlCommand command = new SqlCommand("usp_changePassword");
-            command.CommandType = System.Data.CommandType.StoredProcedure;
+            command.CommandType = CommandType.StoredProcedure;
             command.Parameters.Add(new SqlParameter("@UserID", userID));
-            command.Parameters.Add(new SqlParameter("@newPassword", newPassword));
+            command.Parameters.Add(new SqlParameter("@NewPassword", newPassword));
             command.Connection = connection;
 
             connection.Open();
@@ -149,89 +235,15 @@ namespace GMC_Consignment_API.Controllers
             }
         }
 
-        /// <summary>
-        /// Changes the SKU range of a given user.
-        /// </summary>
-        /// <param name="newMin">The new minimum SKU of the user.</param>
-        /// <param name="newMax">The new maximum SKU of the user.</param>
-        /// <param name="userID">The ID number of the user whose SKU range is being changed.</param>
-        /// <returns></returns>
-        [HttpPost]
-        [Route("ChangeSKURange")]
-        public int ChangeSKURange(int newMin, int newMax, int userID)
-        {
-            SqlConnection connection = new SqlConnection(Connection.connectionString());
-            SqlCommand command = new SqlCommand("usp_changeSKURange");
-            command.CommandType = CommandType.StoredProcedure;
-            command.Parameters.Add(new SqlParameter("@Min", newMin));
-            command.Parameters.Add(new SqlParameter("@Max", newMax));
-            command.Parameters.Add(new SqlParameter("@ID", userID));
-            command.Connection = connection;
-
-            connection.Open();
-            SqlDataAdapter adapter = new SqlDataAdapter(command);
-            DataTable table = new DataTable();
-            adapter.Fill(table);
-            connection.Close();
-
-            if (int.Parse(table.Rows[0][0].ToString()) == newMin && int.Parse(table.Rows[0][1].ToString()) == newMax)
-            {
-                return 1;
-            }
-            else
-            {
-                return 0;
-            }
-        }
-
-        /// <summary>
-        /// Changes the full name of a given user.
-        /// </summary>
-        /// <param name="newName">The new name of the user.</param>
-        /// <param name="userID">The ID number of the user whose name is being changed.</param>
-        /// <returns></returns>
-        [HttpPost]
-        [Route("ChangeName")]
-        public int ChangeName(string newName, int userID)
-        {
-            SqlConnection connection = new SqlConnection(Connection.connectionString());
-            SqlCommand command = new SqlCommand("usp_changeName");
-            command.CommandType = CommandType.StoredProcedure;
-            command.Parameters.Add(new SqlParameter("@NewName", newName));
-            command.Parameters.Add(new SqlParameter("@UserID", userID));
-            command.Connection = connection;
-
-            connection.Open();
-            SqlDataAdapter adapter = new SqlDataAdapter(command);
-            DataTable table = new DataTable();
-            adapter.Fill(table);
-            connection.Close();
-
-            if (table.Rows[0][0].ToString() == newName)
-            {
-                return 1;
-            }
-            else
-            {
-                return 0;
-            }
-        }
-
-        /// <summary>
-        /// Changes the registered email address of a given user.
-        /// </summary>
-        /// <param name="newEmail">The new email address for the user.</param>
-        /// <param name="userID">The ID number of the user whose email is being changed.</param>
-        /// <returns></returns>
         [HttpPost]
         [Route("ChangeEmail")]
-        public int ChangeEmail(string newEmail, int userID)
+        public int ChangeEmail(int userID, string newEmail)
         {
             SqlConnection connection = new SqlConnection(Connection.connectionString());
             SqlCommand command = new SqlCommand("usp_changeEmail");
             command.CommandType = CommandType.StoredProcedure;
-            command.Parameters.Add(new SqlParameter("@NewEmail", newEmail));
             command.Parameters.Add(new SqlParameter("@UserID", userID));
+            command.Parameters.Add(new SqlParameter("@NewEmail", newEmail));
             command.Connection = connection;
 
             connection.Open();
@@ -250,17 +262,175 @@ namespace GMC_Consignment_API.Controllers
             }
         }
 
-        /// <summary>
-        /// Returns a user's username.
-        /// </summary>
-        /// <param name="userID">The ID number of the user whose username has been requested.</param>
-        /// <returns>The user's username.</returns>
-        [HttpGet]
-        [Route("GetUsernameByID")]
-        public string GetUsernameByID(int userID)
+        [HttpPost]
+        [Route("ChangeName")]
+        public int ChangeName(int userID, string newName)
         {
             SqlConnection connection = new SqlConnection(Connection.connectionString());
-            SqlCommand command = new SqlCommand("usp_IDtoUsername");
+            SqlCommand command = new SqlCommand("usp_changeName");
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add(new SqlParameter("@UserID", userID));
+            command.Parameters.Add(new SqlParameter("@NewName", newName));
+            command.Connection = connection;
+
+            connection.Open();
+            SqlDataAdapter adapter = new SqlDataAdapter(command);
+            DataTable table = new DataTable();
+            adapter.Fill(table);
+            connection.Close();
+            
+            if (table.Rows[0][0].ToString() == newName)
+            {
+                return 1;
+            }
+            else
+            {
+                return 0;
+            }
+        }
+
+        [HttpPost]
+        [Route("ChangeSKURange")]
+        public int ChangeSKURange(SKURange range)
+        {
+            SqlConnection connection = new SqlConnection(Connection.connectionString());
+            SqlCommand command = new SqlCommand("usp_changeSKURange");
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add(new SqlParameter("@ConsignmentID", range.ConsignmentID));
+            command.Parameters.Add(new SqlParameter("@SKUMin", range.Min));
+            command.Parameters.Add(new SqlParameter("@SKUMax", range.Max));
+            command.Connection = connection;
+
+            connection.Open();
+            SqlDataAdapter adapter = new SqlDataAdapter(command);
+            DataTable table = new DataTable();
+            adapter.Fill(table);
+            connection.Close();
+
+            if (table.Rows[0][0].ToString() == range.Min.ToString() && table.Rows[0][1].ToString() == range.Max.ToString())
+            {
+                return 1;
+            }
+            else
+            {
+                return 0;
+            }
+        }
+
+        [HttpPost]
+        [Route("ChangeConsignmentName")]
+        public int ChangeConsignmentName(int consignmentID, string newName)
+        {
+            SqlConnection connection = new SqlConnection(Connection.connectionString());
+            SqlCommand command = new SqlCommand("usp_changeConsignmentName");
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add(new SqlParameter("@ConsignmentID", consignmentID));
+            command.Parameters.Add(new SqlParameter("@NewName", newName));
+            command.Connection = connection;
+
+            connection.Open();
+            SqlDataAdapter adapter = new SqlDataAdapter(command);
+            DataTable table = new DataTable();
+            adapter.Fill(table);
+            connection.Close();
+
+            if (table.Rows[0][0].ToString() == newName)
+            {
+                return 1;
+            }
+            else
+            {
+                return 0;
+            }
+        }
+
+        [HttpPost]
+        [Route("ChangeConsignmentStatus")]
+        public int ChangeConsignmentStatus(int consignmentID, int newStatus)
+        {
+            SqlConnection connection = new SqlConnection(Connection.connectionString());
+            SqlCommand command = new SqlCommand("usp_changeConsignmentStatus");
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add(new SqlParameter("@ConsignmentID", consignmentID));
+            command.Parameters.Add(new SqlParameter("@NewStatus", newStatus));
+            command.Connection = connection;
+
+            connection.Open();
+            SqlDataAdapter adapter = new SqlDataAdapter(command);
+            DataTable table = new DataTable();
+            adapter.Fill(table);
+            connection.Close();
+
+            if (table.Rows[0][0].ToString() == newStatus.ToString())
+            {
+                return 1;
+            }
+            else
+            {
+                return 0;
+            }
+        }
+
+        [HttpPost]
+        [Route("ChangeTotal")]
+        public int ChangeTotal(int consignmenID, string newTotal)
+        {
+            SqlConnection connection = new SqlConnection(Connection.connectionString());
+            SqlCommand command = new SqlCommand("usp_changeTotal");
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add(new SqlParameter("@ConsignmentID", consignmenID));
+            command.Parameters.Add(new SqlParameter("@NewTotal", newTotal));
+            command.Connection = connection;
+
+            connection.Open();
+            SqlDataAdapter adapter = new SqlDataAdapter(command);
+            DataTable table = new DataTable();
+            adapter.Fill(table);
+            connection.Close();
+
+            if (table.Rows[0][0].ToString() == newTotal)
+            {
+                return 1;
+            }
+            else
+            {
+                return 0;
+            }
+        }
+
+        [HttpPost]
+        [Route("ChangeMoneyMade")]
+        public int ChangeMoneyMade(int consignmentID, string moneyMade)
+        {
+            SqlConnection connection = new SqlConnection(Connection.connectionString());
+            SqlCommand command = new SqlCommand("usp_changeMoneyMade");
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add(new SqlParameter("@ConsignmentID", consignmentID));
+            command.Parameters.Add(new SqlParameter("@NewAmount", moneyMade));
+            command.Connection = connection;
+
+            connection.Open();
+            SqlDataAdapter adapter = new SqlDataAdapter(command);
+            DataTable table = new DataTable();
+            adapter.Fill(table);
+            connection.Close();
+
+            if (table.Rows[0][0].ToString() == moneyMade)
+            {
+                return 1;
+            }
+            else
+            {
+                return 0;
+            }
+        }
+
+        [HttpGet]
+        [Route("GetUsername")]
+        public string GetUsername(int userID)
+        {
+            SqlConnection connection = new SqlConnection(Connection.connectionString());
+            SqlCommand command = new SqlCommand("usp_getUsername");
             command.CommandType = CommandType.StoredProcedure;
             command.Parameters.Add(new SqlParameter("@UserID", userID));
             command.Connection = connection;
@@ -275,89 +445,89 @@ namespace GMC_Consignment_API.Controllers
         }
 
         [HttpGet]
-        [Route("GetIDByUsername")]
-        public string GetIDByUsername(string username)
+        [Route("GetPassword")]
+        public string GetPassword(int userID)
         {
             SqlConnection connection = new SqlConnection(Connection.connectionString());
-            SqlCommand command = new SqlCommand("usp_usernameToID");
+            SqlCommand command = new SqlCommand("usp_getPassword");
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add(new SqlParameter("@UserID", userID));
+            command.Connection = connection;
+
+            connection.Open();
+            SqlDataAdapter adapter = new SqlDataAdapter(command);
+            DataTable table = new DataTable();
+            adapter.Fill(table);
+            connection.Close();
+
+            return table.Rows[0][0].ToString();
+        }
+
+        [HttpGet]
+        [Route("GetEmail")]
+        public string GetEmail(int userID)
+        {
+            SqlConnection connection = new SqlConnection(Connection.connectionString());
+            SqlCommand command = new SqlCommand("usp_getEmail");
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add(new SqlParameter("@UserID", userID));
+            command.Connection = connection;
+
+            connection.Open();
+            SqlDataAdapter adapter = new SqlDataAdapter(command);
+            DataTable table = new DataTable();
+            adapter.Fill(table);
+            connection.Close();
+
+            return table.Rows[0][0].ToString();
+        }
+
+        [HttpGet]
+        [Route("GetName")]
+        public string GetName(int userID)
+        {
+            SqlConnection connection = new SqlConnection(Connection.connectionString());
+            SqlCommand command = new SqlCommand("usp_getName");
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add(new SqlParameter("@UserID", userID));
+            command.Connection = connection;
+
+            connection.Open();
+            SqlDataAdapter adapter = new SqlDataAdapter(command);
+            DataTable table = new DataTable();
+            adapter.Fill(table);
+            connection.Close();
+
+            return table.Rows[0][0].ToString();
+        }
+
+        [HttpGet]
+        [Route("GetConsignment")]
+        public string GetConsignment(int userID)
+        {
+            SqlConnection connection = new SqlConnection(Connection.connectionString());
+            SqlCommand command = new SqlCommand("usp_getConsignment");
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add(new SqlParameter("@UserID", userID));
+            command.Connection = connection;
+
+            connection.Open();
+            SqlDataAdapter adapter = new SqlDataAdapter(command);
+            DataTable table = new DataTable();
+            adapter.Fill(table);
+            connection.Close();
+
+            return table.Rows[0][0].ToString();
+        }
+
+        [HttpGet]
+        [Route("GetUserID")]
+        public string GetUserID(string username)
+        {
+            SqlConnection connection = new SqlConnection(Connection.connectionString());
+            SqlCommand command = new SqlCommand("usp_getUserID");
             command.CommandType = CommandType.StoredProcedure;
             command.Parameters.Add(new SqlParameter("@Username", username));
-            command.Connection = connection;
-
-            connection.Open();
-            SqlDataAdapter adapter = new SqlDataAdapter(command);
-            DataTable table = new DataTable();
-            adapter.Fill(table);
-            connection.Close();
-
-            return table.Rows[0][0].ToString();
-        }
-
-        [HttpGet]
-        [Route("GetPasswordByID")]
-        public string GetPasswordByID(int userID)
-        {
-            SqlConnection connection = new SqlConnection(Connection.connectionString());
-            SqlCommand command = new SqlCommand("usp_getPasswordByID");
-            command.CommandType = CommandType.StoredProcedure;
-            command.Parameters.Add(new SqlParameter("@UserID", userID));
-            command.Connection = connection;
-
-            connection.Open();
-            SqlDataAdapter adapter = new SqlDataAdapter(command);
-            DataTable table = new DataTable();
-            adapter.Fill(table);
-            connection.Close();
-
-            return table.Rows[0][0].ToString();
-        }
-
-        [HttpGet]
-        [Route("GetSKURangeByID")]
-        public string GetSKURangeByID(int userID)
-        {
-            SqlConnection connection = new SqlConnection(Connection.connectionString());
-            SqlCommand command = new SqlCommand("usp_getSKURangeByID");
-            command.CommandType = CommandType.StoredProcedure;
-            command.Parameters.Add(new SqlParameter("@UserID", userID));
-            command.Connection = connection;
-
-            connection.Open();
-            SqlDataAdapter adapter = new SqlDataAdapter(command);
-            DataTable table = new DataTable();
-            adapter.Fill(table);
-            connection.Close();
-
-            return table.Rows[0][0].ToString() + "," + table.Rows[0][1].ToString();
-        }
-
-        [HttpGet]
-        [Route("GetNameByID")]
-        public string GetNameByID(int userID)
-        {
-            SqlConnection connection = new SqlConnection(Connection.connectionString());
-            SqlCommand command = new SqlCommand("usp_getNameFromID");
-            command.CommandType = CommandType.StoredProcedure;
-            command.Parameters.Add(new SqlParameter("@UserID", userID));
-            command.Connection = connection;
-
-            connection.Open();
-            SqlDataAdapter adapter = new SqlDataAdapter(command);
-            DataTable table = new DataTable();
-            adapter.Fill(table);
-            connection.Close();
-
-            return table.Rows[0][0].ToString();
-        }
-
-        [HttpGet]
-        [Route("GetEmailByID")]
-        public string GetEmailByID(int userID)
-        {
-            SqlConnection connection = new SqlConnection(Connection.connectionString());
-            SqlCommand command = new SqlCommand("usp_getEmailFromID");
-            command.CommandType = CommandType.StoredProcedure;
-            command.Parameters.Add(new SqlParameter("@UserID", userID));
             command.Connection = connection;
 
             connection.Open();
@@ -394,6 +564,139 @@ namespace GMC_Consignment_API.Controllers
             {
                 return 0;
             }
+        }
+
+        [HttpGet]
+        [Route("GetUser")]
+        public string GetUser(int consignmentID)
+        {
+            SqlConnection connection = new SqlConnection(Connection.connectionString());
+            SqlCommand command = new SqlCommand("usp_getUser");
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add(new SqlParameter("@ConsignmentID", consignmentID));
+            command.Connection = connection;
+
+            connection.Open();
+            SqlDataAdapter adapter = new SqlDataAdapter(command);
+            DataTable table = new DataTable();
+            adapter.Fill(table);
+            connection.Close();
+
+            return table.Rows[0][0].ToString();
+        }
+
+        [HttpGet]
+        [Route("GetSKURange")]
+        public string GetSKURange(int consignmentID)
+        {
+            SqlConnection connection = new SqlConnection(Connection.connectionString());
+            SqlCommand command = new SqlCommand("usp_getSKURange");
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add(new SqlParameter("@ConsignmentID", consignmentID));
+            command.Connection = connection;
+
+            connection.Open();
+            SqlDataAdapter adapter = new SqlDataAdapter(command);
+            DataTable table = new DataTable();
+            adapter.Fill(table);
+            connection.Close();
+
+            return table.Rows[0][0].ToString() + "," + table.Rows[0][1].ToString();
+        }
+
+        [HttpGet]
+        [Route("GetConsignmentID")]
+        public string GetConsignmentID(string consignmentName)
+        {
+            SqlConnection connection = new SqlConnection(Connection.connectionString());
+            SqlCommand command = new SqlCommand("usp_getConsignmentID");
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add(new SqlParameter("@ConsignmentName", consignmentName));
+            command.Connection = connection;
+
+            connection.Open();
+            SqlDataAdapter adapter = new SqlDataAdapter(command);
+            DataTable table = new DataTable();
+            adapter.Fill(table);
+            connection.Close();
+
+            return table.Rows[0][0].ToString();
+        }
+
+        [HttpGet]
+        [Route("GetConsignmentName")]
+        public string GetConsignmentName(int consignmentID)
+        {
+            SqlConnection connection = new SqlConnection(Connection.connectionString());
+            SqlCommand command = new SqlCommand("usp_getConsignmentName");
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add(new SqlParameter("@ConsignmentID", consignmentID));
+            command.Connection = connection;
+
+            connection.Open();
+            SqlDataAdapter adapter = new SqlDataAdapter(command);
+            DataTable table = new DataTable();
+            adapter.Fill(table);
+            connection.Close();
+
+            return table.Rows[0][0].ToString();
+        }
+
+        [HttpGet]
+        [Route("GetConsignmentStatus")]
+        public int GetConsignmentStatus(int consignmentID)
+        {
+            SqlConnection connection = new SqlConnection(Connection.connectionString());
+            SqlCommand command = new SqlCommand("usp_getConsignmentStatus");
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add(new SqlParameter("@ConsignmentID", consignmentID));
+            command.Connection = connection;
+
+            connection.Open();
+            SqlDataAdapter adapter = new SqlDataAdapter(command);
+            DataTable table = new DataTable();
+            adapter.Fill(table);
+            connection.Close();
+
+            return int.Parse(table.Rows[0][0].ToString());
+        }
+
+        [HttpGet]
+        [Route("GetTotal")]
+        public string GetTotal(int consignmentID)
+        {
+            SqlConnection connection = new SqlConnection(Connection.connectionString());
+            SqlCommand command = new SqlCommand("usp_getTotal");
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add(new SqlParameter("@ConsignmentID", consignmentID));
+            command.Connection = connection;
+
+            connection.Open();
+            SqlDataAdapter adapter = new SqlDataAdapter(command);
+            DataTable table = new DataTable();
+            adapter.Fill(table);
+            connection.Close();
+
+            return table.Rows[0][0].ToString();
+        }
+
+        [HttpGet]
+        [Route("GetMoneyMade")]
+        public string GetMoneyMade(int consignmentID)
+        {
+            SqlConnection connection = new SqlConnection(Connection.connectionString());
+            SqlCommand command = new SqlCommand("usp_getMoneyMade");
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add(new SqlParameter("@ConsignmentID", consignmentID));
+            command.Connection = connection;
+
+            connection.Open();
+            SqlDataAdapter adapter = new SqlDataAdapter(command);
+            DataTable table = new DataTable();
+            adapter.Fill(table);
+            connection.Close();
+
+            return table.Rows[0][0].ToString();
         }
     }
 }

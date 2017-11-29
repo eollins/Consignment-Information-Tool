@@ -154,11 +154,15 @@
     <Compile Include="App_Start\SwaggerConfig.cs" />
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Compile Include="Connection.cs" />
+    <Compile Include="Controllers\ItemController.cs" />
     <Compile Include="Controllers\UserController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="Models\Assignment.cs" />
+    <Compile Include="Models\ConsignmentInformation.cs" />
     <Compile Include="Models\LoginInfo.cs" />
+    <Compile Include="Models\SKURange.cs" />
     <Compile Include="Models\UserCredentials.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
