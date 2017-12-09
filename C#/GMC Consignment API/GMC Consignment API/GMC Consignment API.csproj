@@ -136,6 +136,8 @@
     <Content Include="index.html" />
     <Content Include="Scripts\bootstrap.js" />
     <Content Include="Scripts\bootstrap.min.js" />
+    <Compile Include="Models\ChangeConsignmentID.cs" />
+    <None Include="Properties\PublishProfiles\GMCConsignmentAPI - Web Deploy.pubxml" />
     <None Include="Scripts\jquery-1.10.2.intellisense.js" />
     <Content Include="Scripts\jquery-1.10.2.js" />
     <Content Include="Scripts\jquery-1.10.2.min.js" />
@@ -160,8 +162,19 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Models\Assignment.cs" />
+    <Compile Include="Models\ChangeItemNumber.cs" />
+    <Compile Include="Models\ChangeSKU.cs" />
     <Compile Include="Models\ConsignmentInformation.cs" />
+    <Compile Include="Models\ItemData.cs" />
     <Compile Include="Models\LoginInfo.cs" />
+    <Compile Include="Models\NewConsignmentName.cs" />
+    <Compile Include="Models\NewConsignmentStatus.cs" />
+    <Compile Include="Models\NewEmail.cs" />
+    <Compile Include="Models\NewMoneyMade.cs" />
+    <Compile Include="Models\NewName.cs" />
+    <Compile Include="Models\NewPassword.cs" />
+    <Compile Include="Models\NewTotal.cs" />
+    <Compile Include="Models\NewUsername.cs" />
     <Compile Include="Models\SKURange.cs" />
     <Compile Include="Models\UserCredentials.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

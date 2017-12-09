@@ -80,28 +80,44 @@ namespace GMC_Consignment_API.Tests
         [TestMethod]
         public void ChangeUsernameTest()
         {
-            int result = controller.ChangeUsername(int.Parse(GetUserID()), "TESTUSER2");
+            NewUsername nu = new NewUsername();
+            nu.UserID = GetUserID();
+            nu.NewUsernameString = "TESTUSERNAME2";
+
+            int result = controller.ChangeUsername(nu);
             Assert.AreEqual(result, 1);
         }
 
         [TestMethod]
         public void ChangePasswordTest()
         {
-            int result = controller.ChangePassword(int.Parse(GetUserID()), "TESTPASSWORD2");
+            NewPassword np = new NewPassword();
+            np.UserID = GetUserID();
+            np.NewPasswordString = "TESTPASSWORD2";
+
+            int result = controller.ChangePassword(np);
             Assert.AreEqual(result, 1);
         }
 
         [TestMethod]
         public void ChangeEmailTest()
         {
-            int result = controller.ChangeEmail(int.Parse(GetUserID()), "TESTEMAIL2");
+            NewEmail ne = new NewEmail();
+            ne.UserID = GetUserID();
+            ne.NewEmailString = "TESTEMAIL2";
+
+            int result = controller.ChangeEmail(ne);
             Assert.AreEqual(result, 1);
         }
 
         [TestMethod]
         public void ChangeNameTest()
         {
-            int result = controller.ChangeName(int.Parse(GetUserID()), "TESTNAME2");
+            NewName nn = new NewName();
+            nn.UserID = GetUserID();
+            nn.NewNameString = "TESTNAME2";
+
+            int result = controller.ChangeName(nn);
             Assert.AreEqual(result, 1);
         }
 
@@ -120,28 +136,44 @@ namespace GMC_Consignment_API.Tests
         [TestMethod]
         public void ChangeConsignmentNameTest()
         {
-            int result = controller.ChangeConsignmentName(int.Parse(GetConsignmentID()), "TESTCONSIGNMENT2");
+            NewConsignmentName ncn = new NewConsignmentName();
+            ncn.ConsignmentID = GetConsignmentID();
+            ncn.NewConsignmentNameString = "TESTCONSIGNMENT2";
+
+            int result = controller.ChangeConsignmentName(ncn);
             Assert.AreEqual(result, 1);
         }
 
         [TestMethod]
         public void ChangeConsignmentStatusTest()
         {
-            int result = controller.ChangeConsignmentStatus(int.Parse(GetConsignmentID()), 1);
+            NewConsignmentStatus ncs = new NewConsignmentStatus();
+            ncs.ConsignmentID = GetConsignmentID();
+            ncs.NewConsignmentStatusInt = 1;
+
+            int result = controller.ChangeConsignmentStatus(ncs);
             Assert.AreEqual(result, 1);
         }
 
         [TestMethod]
         public void ChangeTotalTest()
         {
-            int result = controller.ChangeTotal(int.Parse(GetConsignmentID()), "1");
+            NewTotal nt = new NewTotal();
+            nt.ConsignmentID = GetConsignmentID();
+            nt.NewTotalString = "TESTTOTAL2";
+
+            int result = controller.ChangeTotal(nt);
             Assert.AreEqual(result, 1);
         }
 
         [TestMethod]
         public void ChangeMoneyMadeTest()
         {
-            int result = controller.ChangeMoneyMade(int.Parse(GetConsignmentID()), "1");
+            NewMoneyMade nmm = new NewMoneyMade();
+            nmm.ConsignmentID = GetConsignmentID();
+            nmm.NewMoneyMadeString = "TESTMONEYMADE2";
+
+            int result = controller.ChangeMoneyMade(nmm);
             Assert.AreEqual(result, 1);
         }
 
@@ -190,10 +222,7 @@ namespace GMC_Consignment_API.Tests
         [TestMethod]
         public void AuthenticateTest()
         {
-            LoginInfo info = new LoginInfo();
-            info.Username = "TESTUSER";
-            info.Password = "TESTPASSWORD";
-            int result = controller.Authenticate(info);
+            int result = controller.Authenticate("TESTUSER", "TESTPASSWORD");
             Assert.AreEqual(result, 1);
         }
 
