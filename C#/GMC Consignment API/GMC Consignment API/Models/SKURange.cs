@@ -8,7 +8,7 @@ namespace GMC_Consignment_API.Models
     public class SKURange
     {
         public int ConsignmentID { get; set; }
-        public string Min { get; set; }
-        public string Max { get; set; }
+        public int Min { get; set; }
+        public int Max { get; set; }
     }
 }
