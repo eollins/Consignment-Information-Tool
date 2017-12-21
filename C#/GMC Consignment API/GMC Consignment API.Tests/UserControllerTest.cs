@@ -126,8 +126,8 @@ namespace GMC_Consignment_API.Tests
         {
             SKURange range = new SKURange();
             range.ConsignmentID = int.Parse(GetConsignmentID());
-            range.Min = 1;
-            range.Max = 1;
+            range.Min = "1";
+            range.Max = "1";
 
             int result = controller.ChangeSKURange(range);
             Assert.AreEqual(result, 1);
@@ -272,7 +272,7 @@ namespace GMC_Consignment_API.Tests
         [TestMethod]
         public void GetMoneyMadeTest()
         {
-            string moneyMade = controller.GetMoneyMade(int.Parse(GetConsignmentID()));
+            string moneyMade = controller.GetNetSales(int.Parse(GetConsignmentID()));
             Assert.AreNotEqual(moneyMade, "");
         }
 

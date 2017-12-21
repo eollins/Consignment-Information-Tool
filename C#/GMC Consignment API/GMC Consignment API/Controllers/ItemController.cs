@@ -6,6 +6,7 @@ using System.Data.SqlClient;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Text;
 using System.Web.Http;
 using System.Web.Http.Cors;
 using System.Xml;
@@ -94,6 +95,8 @@ namespace GMC_Consignment_API.Controllers
             }
         }
 
+        [HttpPost]
+        [Route("ChangeItemTitle")]
         public int ChangeItemTitle(int itemID, string newTitle)
         {
             SqlConnection connection = new SqlConnection(Connection.connectionString());
@@ -316,6 +319,214 @@ namespace GMC_Consignment_API.Controllers
             connection.Close();
 
             return table.Rows[0][0].ToString();
+        }
+
+        [HttpGet]
+        [Route("GetItemNumberBySKU")]
+        public string GetItemNumberBySKU(string SKU)
+        {
+            SqlConnection connection = new SqlConnection(Connection.connectionString());
+            SqlCommand command = new SqlCommand("usp_getItemNumberBySKU");
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add(new SqlParameter("@SKU", SKU));
+            command.Connection = connection;
+
+            connection.Open();
+            SqlDataAdapter adapter = new SqlDataAdapter(command);
+            DataTable table = new DataTable();
+            adapter.Fill(table);
+            connection.Close();
+
+            return table.Rows[0][0].ToString();
+        }
+
+        [HttpGet]
+        [Route("GetItemIDBySKU")]
+        public string GetItemIDBySKU(string SKU)
+        {
+            SqlConnection connection = new SqlConnection(Connection.connectionString());
+            SqlCommand command = new SqlCommand("usp_getItemIDBySKU");
+            command.CommandType = CommandType.StoredProcedure;
+            command.Parameters.Add(new SqlParameter("@SKU", SKU));
+            command.Connection = connection;
+
+            connection.Open();
+            SqlDataAdapter adapter = new SqlDataAdapter(command);
+            DataTable table = new DataTable();
+            adapter.Fill(table);
+            connection.Close();
+
+            return table.Rows[0][0].ToString();
+        }
+
+        [HttpGet]
+        [Route("GetItemDataBySKU")]
+        public ItemInformation GetItemDataBySKU(string SKU)
+        {
+            ItemInformation info = new ItemInformation();
+            info.ItemID = GetItemIDBySKU(SKU);
+            info.ItemTitle = GetItemTitle(int.Parse(info.ItemID));
+            info.ItemNumber = GetItemNumberBySKU(SKU);
+            info.SKU = SKU;
+            info.ConsignmentID = GetItemConsignmentID(int.Parse(info.ItemID));
+
+            return info;
+        }
+
+        [HttpGet]
+        [Route("GetItemNumbersBySKURange")]
+        public string GetItemNumbersBySKURanges(string mins, string maxs, string prefixes)
+        {
+            string[] minArray = mins.Split(',');
+            string[] maxArray = maxs.Split(',');
+            string[] prefixArray = prefixes.Split(',');
+
+            string full = "";
+            for (int i = 0; i < minArray.Length; i++)
+            {
+                string itemNumbers = "";
+                for (int e = int.Parse(minArray[i]); e <= int.Parse(maxArray[i]); e++)
+                {
+                    string itemNumber = "";
+                    try
+                    {
+                        itemNumber = GetItemNumberBySKU((prefixArray[i] + e).ToString());
+                    }
+                    catch
+                    {
+                        itemNumber = "N";
+                    }
+
+                    string status = "";
+                    try
+                    {
+                        XmlDocument doc = new XmlDocument();
+                        doc.Load("http://open.api.ebay.com/shopping?callname=GetSingleItem&responseencoding=XML&appid=GregoryM-mailer-PRD-a45ed6035-97c14545&siteid=0&version=967&ItemID=" + itemNumber);
+                        string result = ((XmlElement)((XmlElement)doc.GetElementsByTagName("GetSingleItemResponse")[0]).GetElementsByTagName("Item")[0]).GetElementsByTagName("ListingStatus")[0].InnerText;
+
+                        if (result == "Completed")
+                        {
+                            status = "c";
+                        }
+                        else if (result == "Ended")
+                        {
+                            status = "u";
+                        }
+                        else if (result == "Active")
+                        {
+                            status = "a";
+                        }
+                    }
+                    catch
+                    {
+                        status = "n";
+                    }
+
+                    itemNumbers += "," + itemNumber + "~" + status;
+                }
+
+                itemNumbers = itemNumbers.Substring(1) + ",";
+                full += itemNumbers;
+            }
+
+            return full;
+        }
+
+        [HttpPost]
+        [Route("GetItemTitles")]
+        public string GetItemTitles(ItemNumberList numbers)
+        {
+            string[] nums = numbers.ItemNumbers.Split(',');
+            string titles = "";
+            foreach (string number in nums)
+            {
+                try
+                {
+                    string title = GetItemTitle(int.Parse(GetItemID(number)));
+                    StringBuilder builder = new StringBuilder(title);
+                    builder.Replace(',', ' ');
+                    title = builder.ToString();
+
+                    if (title.Length >= 45)
+                    {
+                        titles += "," + title.Substring(0, 42) + "...";
+                    }
+                    else
+                    {
+                        titles += "," + title;
+                    }
+                }
+                catch
+                {
+                    titles += ",N";
+                }
+            }
+            titles = titles.Substring(1);
+
+            return titles;
+        }
+
+        [HttpPost]
+        [Route("GetItemEndDates")]
+        public string GetItemEndDates(ItemNumberList list)
+        {
+            string[] nums = list.ItemNumbers.Split(',');
+            string endDates = "";
+
+            foreach (string number in nums)
+            {
+                XmlDocument doc = new XmlDocument();
+
+                string number2 = number.Substring(0, number.Length - 2);
+                try
+                {
+                    doc.Load("http://open.api.ebay.com/shopping?callname=GetSingleItem&responseencoding=XML&appid=GregoryM-mailer-PRD-a45ed6035-97c14545&siteid=0&version=967&ItemID=" + number2);
+                    string endDate = ((XmlElement)((XmlElement)doc.GetElementsByTagName("GetSingleItemResponse")[0]).GetElementsByTagName("Item")[0]).GetElementsByTagName("EndTime")[0].InnerText;
+                    string[] components1 = endDate.Split('T');
+                    string[] date = components1[0].Split('-');
+                    string[] time = components1[1].Split(':');
+                    time[2] = time[2].Substring(0, time[2].IndexOf('.'));
+                    DateTime endTimeDt = new DateTime(int.Parse(date[0]), int.Parse(date[1]), int.Parse(date[2]), int.Parse(time[0]), int.Parse(time[1]), int.Parse(time[2]));
+                    endTimeDt = endTimeDt.AddHours(-8);
+                    endDate = endTimeDt.Month + "/" + endTimeDt.Day + "/" + endTimeDt.Year + " " + endTimeDt.Hour + ":" + endTimeDt.Minute + ":" + endTimeDt.Second + " PST";
+                    endDates += "~" + endDate;
+                }
+                catch
+                {
+                    endDates += "~No End Time Found";
+                }
+            }
+
+            endDates = endDates.Substring(1);
+            return endDates;
+        }
+
+        [HttpPost]
+        [Route("GetItemPrices")]
+        public string GetItemPrices(ItemNumberList items)
+        {
+            string[] nums = items.ItemNumbers.Split(',');
+            string prices = "";
+
+            foreach (string number in nums)
+            {
+                string number2 = number.Substring(0, number.Length - 2);
+                try
+                {
+                    XmlDocument doc = new XmlDocument();
+                    doc.Load("http://open.api.ebay.com/shopping?callname=GetSingleItem&responseencoding=XML&appid=GregoryM-mailer-PRD-a45ed6035-97c14545&siteid=0&version=967&ItemID=" + number2);
+                    string price = ((XmlElement)((XmlElement)doc.GetElementsByTagName("GetSingleItemResponse")[0]).GetElementsByTagName("Item")[0]).GetElementsByTagName("ConvertedCurrentPrice")[0].InnerText;
+                    prices += ",$" + price;
+                }
+                catch
+                {
+                    prices += ",No Price Found";
+                }
+            }
+
+            prices = prices.Substring(1);
+
+            return prices;
         }
     }
 }

@@ -164,8 +164,11 @@
     <Compile Include="Models\Assignment.cs" />
     <Compile Include="Models\ChangeItemNumber.cs" />
     <Compile Include="Models\ChangeSKU.cs" />
+    <Compile Include="Models\ConsignmentData.cs" />
     <Compile Include="Models\ConsignmentInformation.cs" />
     <Compile Include="Models\ItemData.cs" />
+    <Compile Include="Models\ItemInformation.cs" />
+    <Compile Include="Models\ItemNumberList.cs" />
     <Compile Include="Models\LoginInfo.cs" />
     <Compile Include="Models\NewConsignmentName.cs" />
     <Compile Include="Models\NewConsignmentStatus.cs" />
@@ -175,6 +178,7 @@
     <Compile Include="Models\NewPassword.cs" />
     <Compile Include="Models\NewTotal.cs" />
     <Compile Include="Models\NewUsername.cs" />
+    <Compile Include="Models\Pair.cs" />
     <Compile Include="Models\SKURange.cs" />
     <Compile Include="Models\UserCredentials.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
